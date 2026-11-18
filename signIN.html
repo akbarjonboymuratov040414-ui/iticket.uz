@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish — iTicket.UZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ticket.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="iTicket bosh sahifa">
+                <span class="logo-mark">i</span>Ticket<span>.UZ</span>
+            </a>
+            <div class="header-center">
+                <div class="lang-switch">
+                    <button class="lang-btn" id="langBtnUz" onclick="setLang('uz')">UZ</button>
+                    <button class="lang-btn" id="langBtnRu" onclick="setLang('ru')">RU</button>
+                </div>
+                <nav class="main-nav">
+                    <a href="index.html" id="navHome">Bosh sahifa</a>
+                </nav>
+            </div>
+            <div class="header-actions"></div>
+        </div>
+    </header>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <h1 id="signInTitle">Kirish</h1>
+            <p class="subtitle" id="signInSub">iTicket.UZ hisobingizga kiring</p>
+            <div class="auth-success" id="authNotice" style="display:none; background:#fefce8; border-color:#fef08a; color:#854d0e;"></div>
+
+            <div class="auth-field">
+                <label for="login" id="labelLogin">Login</label>
+                <input id="login" type="text" placeholder="admin yoki foydalanuvchi logini" autofocus>
+            </div>
+            <div class="auth-field">
+                <label for="password" id="labelPass">Parol</label>
+                <input id="password" type="password" placeholder="Parolingizni kiriting">
+            </div>
+
+            <button class="auth-btn" id="loginBtn">Kirish</button>
+            <div class="auth-error" id="authError"></div>
+            <p class="auth-link">
+                <span id="noAccountText">Hisobingiz yo'qmi?</span>
+                <a id="signUpLink" href="signUp.html">Ro'yxatdan o'tish</a>
+            </p>
+
+            <div style="margin-top:20px; padding:12px; background:#f8fafc; border-radius:10px; font-size:12px; color:var(--muted); border:1px dashed var(--line);">
+                <strong>💡 Admin login ma'lumotlari:</strong><br>
+                Login: <code>admin</code> | Parol: <code>admin123</code>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script>
+        const curLang = getLang();
+        document.getElementById(curLang === 'ru' ? 'langBtnRu' : 'langBtnUz').classList.add('active');
+
+        if (curLang === 'ru') {
+            document.getElementById("signInTitle").textContent = "Вход";
+            document.getElementById("signInSub").textContent = "Войдите в ваш аккаунт iTicket.UZ";
+            document.getElementById("loginBtn").textContent = "Войти";
+            document.getElementById("noAccountText").textContent = "Нет аккаунта?";
+            document.getElementById("signUpLink").textContent = "Зарегистрироваться";
+            document.getElementById("navHome").textContent = "Главная";
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectUrl = params.get("redirect") || "index.html";
+
+        if (params.get("redirect")) {
+            const notice = document.getElementById("authNotice");
+            notice.textContent = curLang === 'ru' ? "Войдите для выбора и бронирования мест." : "Davom etish va o'rindiqni bron qilish uchun tizimga kiring.";
+            notice.style.display = "block";
+            document.getElementById("signUpLink").href = "signUp.html?redirect=" + encodeURIComponent(redirectUrl);
+        }
+
+        if (isLoggedIn()) {
+            const curUser = getCurrentUser();
+            if (curUser && curUser.role === "admin") {
+                window.location.href = "adminPanel.html";
+            } else {
+                window.location.href = redirectUrl;
+            }
+        }
+
+        document.getElementById("loginBtn").addEventListener("click", function () {
+            const login = document.getElementById("login").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorEl = document.getElementById("authError");
+            errorEl.style.display = "none";
+
+            if (!login || !password) {
+                errorEl.textContent = curLang === 'ru' ? "Введите логин и пароль!" : "Login va parolni kiriting!";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const usersList = typeof Users !== "undefined" ? Users : JSON.parse(localStorage.getItem("Users") || "[]");
+            const user = usersList.find(u => (u.login.toLowerCase() === login.toLowerCase() || u.username.toLowerCase() === login.toLowerCase()) && u.password === password);
+
+            if (!user) {
+                errorEl.textContent = curLang === 'ru' ? "Неверный логин или пароль!" : "Login yoki parol noto'g'ri!";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            localStorage.setItem("loggedInUser", user.login);
+            localStorage.setItem("username", user.username);
+            localStorage.setItem("role", user.role);
+
+            // Agar admin bo'lsa va maxsus redirect ko'rsatilmagan bo'lsa -> adminPanel.html ga yo'naltirish
+            if (user.role === "admin" && (!params.get("redirect") || redirectUrl === "index.html")) {
+                window.location.href = "adminPanel.html";
+            } else {
+                window.location.href = redirectUrl;
+            }
+        });
+
+        document.getElementById("password").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") document.getElementById("loginBtn").click();
+        });
+    </script>
+</body>
+</html>

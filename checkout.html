@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biletlar uchun to'lov — iTicket.UZ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ticket.css">
+  <style>
+    .qr-mock {
+      width: 110px;
+      height: 110px;
+      background: #ffffff;
+      padding: 6px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .qr-mock img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-mark">i</span>Ticket<span>.UZ</span>
+      </a>
+      <div class="header-center">
+        <div class="lang-switch">
+          <button class="lang-btn" id="langBtnUz" onclick="setLang('uz')">UZ</button>
+          <button class="lang-btn" id="langBtnRu" onclick="setLang('ru')">RU</button>
+        </div>
+        <nav class="main-nav">
+          <a href="index.html">Bosh sahifa</a>
+        </nav>
+      </div>
+      <div class="header-actions" id="headerActions">
+        <a class="profile-btn" href="signIN.html">👤</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-shell">
+    <div id="checkoutMainView">
+      <h1 style="font-size:28px; font-weight:900; margin-bottom:24px;" id="checkoutTitle">Biletlar uchun to'lov (Checkout)</h1>
+
+      <div class="checkout-grid">
+        <!-- Order Summary -->
+        <div class="checkout-card">
+          <h2 id="orderSummaryTitle">Buyurtma tafsilotlari</h2>
+          <div id="orderItemsContainer" style="display:flex; flex-direction:column; gap:16px;">
+            <!-- Populated via JS -->
+          </div>
+
+          <div style="margin-top:24px; padding-top:18px; border-top:2px dashed var(--line);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; color:var(--muted); font-size:14px;">
+              <span>Xizmat haqi (0%)</span>
+              <span>0 UZS</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:900; color:var(--text);">
+              <span>Jami to'lov:</span>
+              <span id="grandTotalText" style="color:#b47800;">0 UZS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="checkout-card">
+          <h2 id="paymentMethodTitle"> To'lov usulini tanlang</h2>
+
+          <div class="payment-methods-grid">
+            <div class="payment-method-item active" data-method="click">
+              <span style="font-size:22px;"></span>
+              <span>Click</span>
+            </div>
+            <div class="payment-method-item" data-method="payme">
+              <span style="font-size:22px;"></span>
+              <span>Payme</span>
+            </div>
+            <div class="payment-method-item" data-method="uzum">
+              <span style="font-size:22px;"></span>
+              <span>Uzum Bank</span>
+            </div>
+            <div class="payment-method-item" data-method="card">
+              <span style="font-size:22px;"></span>
+              <span>Visa / MC</span>
+            </div>
+          </div>
+
+          <!-- Interactive Card Visual Preview -->
+          <div class="card-visual-preview">
+            <div class="card-preview-top">
+              <div class="card-chip"></div>
+              <div class="card-brand-logo" id="previewBrand">CLICK</div>
+            </div>
+            <div class="card-number-display" id="previewNumber">8600 •••• •••• ••••</div>
+            <div class="card-preview-bottom">
+              <div>
+                <small>Karta egasi</small>
+                <div class="card-holder-display" id="previewHolder">SARDOR ALIYEV</div>
+              </div>
+              <div>
+                <small>Muddati</small>
+                <div class="card-expiry-display" id="previewExpiry">12/28</div>
+              </div>
+            </div>
+          </div>
+
+          <form id="paymentForm">
+            <div class="auth-field">
+              <label for="cardName">Karta egasining to'liq ismi *</label>
+              <input type="text" id="cardName" placeholder="SARDOR ALIYEV" required style="text-transform:uppercase;">
+            </div>
+
+            <div class="auth-field">
+              <label for="cardNumber">Karta raqami (Uzcard / Humo / Visa) *</label>
+              <input type="text" id="cardNumber" placeholder="8600 0000 0000 0000" maxlength="19" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="auth-field">
+                <label for="cardExpiry">Amal qilish muddati *</label>
+                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+              </div>
+              <div class="auth-field">
+                <label for="cardCvv">CVV / Kod *</label>
+                <input type="password" id="cardCvv" placeholder="•••" maxlength="3" required>
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label for="payerPhone">Telefon raqam (SMS-chek uchun) *</label>
+              <input type="tel" id="payerPhone" placeholder="+998 90 123 45 67" required>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%; height:52px; font-size:16px; margin-top:14px;" id="payBtn">
+               Xavfsiz to'lash
+            </button>
+
+            <div style="margin-top:16px; display:flex; justify-content:center; gap:18px; font-size:12px; color:var(--muted); font-weight:600;">
+              <span> 256-bit SSL</span>
+              <span> 3D-Secure</span>
+              <span> Kafolatlangan chipta</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success View with E-Ticket -->
+    <div id="paymentSuccessView" style="display:none; max-width:800px; margin:0 auto;">
+      <div class="eticket-card">
+        <div class="eticket-header">
+          <div>
+            <span style="color:var(--yellow); font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase;">RASMIY ELEKTRON BILET</span>
+            <h2 style="font-size:26px; font-weight:900; margin-top:4px;" id="ticketEventTitle">Avaz Oxun Konserti</h2>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:12px; color:#94a3b8;">Bilet kodi</span>
+            <h3 style="font-size:18px; color:var(--yellow); font-family:monospace;" id="ticketCode">#TCK-98421</h3>
+          </div>
+        </div>
+
+        <div class="eticket-body">
+          <div>
+            <p style="color:#94a3b8; font-size:13px; margin-bottom:4px;">Xaridor: <strong style="color:#fff;" id="ticketPayer">Sardor Aliyev</strong></p>
+            <p style="color:#94a3b8; font-size:13px; margin-bottom:4px;">Sana va Vaqt: <strong style="color:#fff;" id="ticketDateTime">20-Noyabr, 19:00</strong></p>
+            <p style="color:#94a3b8; font-size:13px; margin-bottom:4px;">Joylashuv: <strong style="color:#fff;" id="ticketVenue">Peoples' Friendship Palace</strong></p>
+            <p style="color:#94a3b8; font-size:13px; margin-bottom:8px;">O'rindiqlar: <strong style="color:var(--yellow); font-size:16px;" id="ticketSeats">P4-12, P4-13</strong></p>
+            <span style="display:inline-block; padding:4px 12px; border-radius:12px; background:#166534; color:#86efac; font-size:12px; font-weight:800;">TO'LANGAN (PAID)</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div class="qr-mock">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=iTicketUZ-VERIFIED" alt="QR Code">
+            </div>
+            <small style="color:#94a3b8; font-size:10px; margin-top:6px;">Kirishda ko'rsating</small>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:16px; margin-top:28px;">
+        <button class="btn-primary" onclick="window.print()">🖨 Biletni chop etish / Saqlash</button>
+        <a href="index.html" class="cancel-select-btn" style="text-decoration:none; padding:14px 28px; font-weight:700;">Bosh sahifaga qaytish</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="db.js"></script>
+  <script>
+    const curLang = getLang();
+    document.getElementById(curLang === 'ru' ? 'langBtnRu' : 'langBtnUz').classList.add('active');
+
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      document.getElementById("headerActions").innerHTML = `
+        <span class="user-badge"> ${currentUser.username}</span>
+      `;
+      document.getElementById("cardName").value = currentUser.username.toUpperCase();
+      document.getElementById("previewHolder").textContent = currentUser.username.toUpperCase();
+      if (currentUser.number) document.getElementById("payerPhone").value = currentUser.number;
+    }
+
+    /* Auto format & Live update card preview */
+    const cardNumberInput = document.getElementById("cardNumber");
+    const previewNumber = document.getElementById("previewNumber");
+    cardNumberInput.addEventListener("input", function (e) {
+      let val = e.target.value.replace(/\D/g, "");
+      val = val.substring(0, 16);
+      let formatted = "";
+      for (let i = 0; i < val.length; i++) {
+        if (i > 0 && i % 4 === 0) formatted += " ";
+        formatted += val[i];
+      }
+      e.target.value = formatted;
+      previewNumber.textContent = formatted || "8600 •••• •••• ••••";
+    });
+
+    const cardNameInput = document.getElementById("cardName");
+    const previewHolder = document.getElementById("previewHolder");
+    cardNameInput.addEventListener("input", function (e) {
+      previewHolder.textContent = e.target.value.toUpperCase() || "SARDOR ALIYEV";
+    });
+
+    const cardExpiryInput = document.getElementById("cardExpiry");
+    const previewExpiry = document.getElementById("previewExpiry");
+    cardExpiryInput.addEventListener("input", function (e) {
+      let val = e.target.value.replace(/\D/g, "");
+      val = val.substring(0, 4);
+      if (val.length >= 3) {
+        e.target.value = val.substring(0, 2) + "/" + val.substring(2);
+      } else {
+        e.target.value = val;
+      }
+      previewExpiry.textContent = e.target.value || "12/28";
+    });
+
+    /* Select payment method & update preview badge */
+    const previewBrand = document.getElementById("previewBrand");
+    document.querySelectorAll(".payment-method-item").forEach(item => {
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".payment-method-item").forEach(i => i.classList.remove("active"));
+        item.classList.add("active");
+        const method = item.dataset.method;
+        if (method === "click") previewBrand.textContent = "CLICK";
+        else if (method === "payme") previewBrand.textContent = "PAYME";
+        else if (method === "uzum") previewBrand.textContent = "UZUM";
+        else previewBrand.textContent = "VISA / MC";
+      });
+    });
+
+    /* Load bookings for checkout */
+    let eventList = typeof Events !== "undefined" ? Events : [];
+    if (localStorage.getItem("Events")) {
+      try {
+        const stored = JSON.parse(localStorage.getItem("Events"));
+        if (stored && Array.isArray(stored) && stored.length >= Events.length) {
+          eventList = stored;
+        } else {
+          eventList = Events;
+          localStorage.setItem("Events", JSON.stringify(Events));
+        }
+      } catch(e) {
+        eventList = Events;
+      }
+    } else {
+      localStorage.setItem("Events", JSON.stringify(Events));
+    }
+
+    const bookings = JSON.parse(localStorage.getItem("Bookings") || "[]");
+    const userBookings = currentUser ? bookings.filter(b => b.userLogin === currentUser.login) : bookings;
+
+    const itemsContainer = document.getElementById("orderItemsContainer");
+    let grandTotal = 0;
+
+    if (userBookings.length === 0) {
+      itemsContainer.innerHTML = '<p style="color:var(--muted); padding:20px 0;">Savatda to\'lov qilinadigan biletlar yo\'q. Avval bilet tanlang.</p>';
+      document.getElementById("payBtn").disabled = true;
+    } else {
+      itemsContainer.innerHTML = userBookings.map((b, idx) => {
+        const ev = eventList.find(e => e.id === b.eventId) || eventList[0];
+        const pricePer = ev.narxdan || 80000;
+        const total = pricePer * (b.seats ? b.seats.length : 1);
+        grandTotal += total;
+
+        return `
+          <div class="order-summary-item">
+            <img src="${ev.rasm}" alt="${ev.title}" class="order-summary-thumb" onerror="this.src='https://cdn.iticket.uz/event/no-app-poster.png'">
+            <div style="flex-grow:1;">
+              <h4 style="font-size:15px; font-weight:800; color:var(--text-dark); line-height:1.3;">${ev.title}</h4>
+              <p style="color:var(--muted); font-size:12px; margin-top:3px;"> ${ev.joy} ·  ${ev.sana}</p>
+              <div class="order-seat-badge">Joylar: ${b.seats.join(", ")} (${b.seats.length} ta)</div>
+            </div>
+            <strong style="font-size:16px; font-weight:900; color:#b47800; white-space:nowrap;">${total.toLocaleString("ru-RU")} UZS</strong>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("grandTotalText").textContent = grandTotal.toLocaleString("ru-RU") + " UZS";
+    }
+
+      document.getElementById("grandTotalText").textContent = grandTotal.toLocaleString("ru-RU") + " UZS";
+    }
+
+    /* Submit payment */
+    document.getElementById("paymentForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const payBtn = document.getElementById("payBtn");
+      payBtn.disabled = true;
+      payBtn.textContent = "To'lov amalga oshirilmoqda...";
+
+      setTimeout(() => {
+        document.getElementById("checkoutMainView").style.display = "none";
+        document.getElementById("paymentSuccessView").style.display = "block";
+
+        const latestBooking = userBookings[userBookings.length - 1];
+        if (latestBooking) {
+          const ev = eventList.find(e => e.id === latestBooking.eventId) || eventList[0];
+          document.getElementById("ticketEventTitle").textContent = ev.title;
+          document.getElementById("ticketVenue").textContent = ev.joy;
+          document.getElementById("ticketDateTime").textContent = ev.sana + (ev.vaqt ? " · " + ev.vaqt : "");
+          document.getElementById("ticketSeats").textContent = latestBooking.seats.join(", ");
+        }
+
+        document.getElementById("ticketPayer").textContent = document.getElementById("cardName").value;
+        document.getElementById("ticketCode").textContent = "#TCK-" + Math.floor(10000 + Math.random() * 90000);
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

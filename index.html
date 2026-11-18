@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iTicket.UZ | Tadbirlar va Biletlar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ticket.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="iTicket bosh sahifa">
+                <span class="logo-mark">i</span>Ticket<span>.UZ</span>
+            </a>
+
+            <div class="header-center">
+                <div class="lang-switch">
+                    <button class="lang-btn" id="langBtnUz" onclick="setLang('uz')">UZ</button>
+                    <button class="lang-btn" id="langBtnRu" onclick="setLang('ru')">RU</button>
+                </div>
+
+                <nav class="main-nav">
+                    <a href="#events" data-view="events" id="navAllEvents">Barcha tadbirlar</a>
+                    <a href="#category/concerts" data-category="concerts" id="navConcerts">Konsertlar</a>
+                    <a href="#category/cultural-events" data-category="cultural-events" id="navCulture">Madaniy tadbirlar</a>
+                    <details class="category-menu">
+                        <summary id="navCategories">Kategoriyalar</summary>
+                        <div class="category-menu-list">
+                            <a href="#category/sport" data-category="sport" id="navSport">Sport</a>
+                            <a href="#category/theater" data-category="theater" id="navTheater">Teatr</a>
+                            <a href="#category/kids" data-category="kids" id="navKids">Bolalar uchun</a>
+                            <a href="#category/other-events" data-category="other-events" id="navOther">Boshqa tadbirlar</a>
+                        </div>
+                    </details>
+                </nav>
+            </div>
+
+            <div class="header-actions" id="headerActions">
+                <button class="icon-btn" id="favoritesButton" title="Sevimlilar">♡<span class="action-count" id="favoritesCount">0</span></button>
+                <button class="icon-btn" id="searchButton" title="Qidiruv">⌕</button>
+                <button class="cart-btn" id="cartButton" title="Savat">
+                    🛒<span class="cart-amount" id="cartAmount">0</span>
+                </button>
+                <a class="profile-btn" id="profileLink" href="signIN.html" title="Kirish">👤</a>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Menyu" aria-expanded="false">☰</button>
+            </div>
+        </div>
+        <nav class="mobile-nav" id="mobileNav" aria-label="Asosiy menyu" hidden>
+            <a href="#events" data-view="events">Barcha tadbirlar</a>
+            <a href="#category/concerts" data-category="concerts">Konsertlar</a>
+            <a href="#category/cultural-events" data-category="cultural-events">Madaniy tadbirlar</a>
+            <a href="#category/sport" data-category="sport">Sport</a>
+            <a href="#category/theater" data-category="theater">Teatr</a>
+            <a href="#category/kids" data-category="kids">Bolalar uchun</a>
+            <a href="#category/other-events" data-category="other-events">Boshqa tadbirlar</a>
+        </nav>
+    </header>
+
+    <dialog class="utility-dialog" id="utilityDialog" aria-labelledby="utilityTitle">
+        <div class="utility-dialog-inner">
+            <button class="dialog-close" id="dialogClose" aria-label="Yopish">×</button>
+            <div id="utilityContent"></div>
+        </div>
+    </dialog>
+
+    <main class="page-shell">
+        <section class="hero-wrap" aria-label="Tavsiya etilgan tadbirlar">
+            <div class="hero-slider">
+                <button class="carousel-btn hero-prev" aria-label="Oldingi">‹</button>
+                <div id="featuredEvent"></div>
+                <button class="carousel-btn hero-next" aria-label="Keyingi">›</button>
+                <div class="hero-pagination" id="heroPagination" aria-label="Slayder navigatsiyasi"></div>
+            </div>
+        </section>
+
+        <!-- Kategoriya va Sanalar bo'yicha filter -->
+        <section class="filter-bar" id="filterBar">
+            <div class="filter-group">
+                <label id="lblFilterCat" for="filterCategory">Kategoriya</label>
+                <select id="filterCategory">
+                    <option value="all">Barcha kategoriyalar</option>
+                    <option value="concerts">Konsertlar</option>
+                    <option value="cultural-events">Madaniy tadbirlar</option>
+                    <option value="theater">Teatr</option>
+                    <option value="sport">Sport</option>
+                    <option value="kids">Bolalar uchun</option>
+                    <option value="other-events">Boshqa tadbirlar</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label id="lblFilterFrom" for="filterDateFrom">Sanadan boshlab</label>
+                <input type="date" id="filterDateFrom">
+            </div>
+
+            <div class="filter-group">
+                <label id="lblFilterTo" for="filterDateTo">Sanagacha</label>
+                <input type="date" id="filterDateTo">
+            </div>
+
+            <button class="filter-btn-search" id="applyFilterBtn">Filtrlash</button>
+            <button class="filter-btn-reset" id="resetFilterBtn"> Tozalash</button>
+        </section>
+
+        <!-- Shu haftada bo'ladigan tadbirlar -->
+        <section class="week-strip" id="weekStrip">
+            <h2 class="week-strip-title" id="weekStripTitle"> Shu haftada bo'ladigan tadbirlar</h2>
+            <div class="week-days-row" id="weekDaysRow">
+                <button class="day-pill active" data-day="all">Barchasi</button>
+                <button class="day-pill" data-day="1">Dushanba</button>
+                <button class="day-pill" data-day="2">Seshanba</button>
+                <button class="day-pill" data-day="3">Chorshanba</button>
+                <button class="day-pill" data-day="4">Payshanba</button>
+                <button class="day-pill" data-day="5">Juma</button>
+                <button class="day-pill" data-day="6">Shanba</button>
+                <button class="day-pill" data-day="0">Yakshanba</button>
+            </div>
+        </section>
+
+        <div id="eventSections"></div>
+    </main>
+
+    <section class="app-download" aria-label="iTicket ilovasini yuklab olish">
+        <div class="app-download-content">
+            <h2 id="appDownloadTitle">KEYINGI SAYOHATINGIZNI TOPING</h2>
+            <p id="appDownloadText">iTicket.UZ ilovasi barcha turdagi tadbirlarga (teatr, sport, konsertlar, ko‘rgazmalar) biletlarni oson va tez xarid qilish imkonini beradi.</p>
+            <div class="app-store-links">
+                <a href="https://play.google.com/store/apps/details?id=uz.iticket.iticket" target="_blank" rel="noopener">
+                    <img src="https://iticket.uz/images/android.png" alt="Google Play">
+                </a>
+                <a href="https://apps.apple.com/uz/app/iticket-az/id1460557783" target="_blank" rel="noopener">
+                    <img src="https://iticket.uz/images/ios.png" alt="App Store">
+                </a>
+            </div>
+        </div>
+        <div class="app-download-stamp" aria-hidden="true">DOWNLOAD NOW DOWNLOAD NOW DOWNLOAD NOW DOWNLOAD NOW</div>
+        <img class="app-download-phone" src="https://cdn.iticket.uz/images/app.png" alt="iTicket mobil ilovasi">
+    </section>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <section class="footer-contact">
+                <a href="index.html" class="footer-brand"><span>i</span>ticket.uz</a>
+                <p id="footerSupportLabel">Qo'llab-quvvatlash xizmati</p>
+                <a class="footer-phone" href="tel:+998712071071">+998 712 071-071</a>
+                <a class="footer-phone" href="tel:+998712072072">+998 712 072-072</a>
+            </section>
+
+            <section>
+                <h3 id="footerInfoLabel">Ma'lumot</h3>
+                <ul>
+                    <li><a href="https://iticket.uz/en/page/faq">FAQ</a></li>
+                    <li><a href="https://iticket.uz/en/page/support">Yordam</a></li>
+                    <li><a href="https://iticket.uz/en/page/rules">Foydalanish shartlari</a></li>
+                    <li><a href="https://iticket.uz/en/page/eticket">E-bilet</a></li>
+                    <li><a href="https://iticket.uz/en/page/return">Qaytarish va almashtirish</a></li>
+                    <li><a href="https://iticket.uz/en/page/privacy">Maxfiylik siyosati</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>iTicket</h3>
+                <ul>
+                    <li><a href="https://iticket.uz/en/page/about">Biz haqimizda</a></li>
+                    <li><a href="https://iticket.uz/en/venues">Joylar</a></li>
+                    <li><a href="https://iticket.uz/en/point-of-sales">Sotuv nuqtalari</a></li>
+                    <li><a href="https://iticket.uz/en/page/contacts">Kontaktlar</a></li>
+                </ul>
+            </section>
+
+            <section class="footer-security">
+                <h3 id="footerSecLabel">Xavfsizlik</h3>
+                <p id="footerSecText">Barcha to'lovlar Visa, Mastercard, Click va Uzum Bank orqali 3D Secure bilan himoyalangan</p>
+                <img src="https://iticket.uz/images/cards.svg" alt="Mastercard va Visa">
+                <img src="https://iticket.uz/images/cards2-1.svg" alt="Click va Uzum Bank">
+            </section>
+        </div>
+        <div class="container footer-bottom">
+            <p id="footerCopyright">ITICKET — "ITICKET INGURUZ" MChJ QKning ro'yxatdan o'tgan savdo belgisi</p>
+            <nav class="footer-social" aria-label="Ijtimoiy tarmoqlar">
+                <a href="https://t.me/iticket_tg" target="_blank" rel="noopener"></a>
+                <a href="https://www.facebook.com/iTicket.uz/" target="_blank" rel="noopener"></a>
+                <a href="https://www.instagram.com/iticket.uz/" target="_blank" rel="noopener"></a>
+            </nav>
+        </div>
+    </footer>
+
+    <button class="floating-cart" id="floatingCartBtn" aria-label="Savatni ochish">
+        <span class="floating-cart-count" id="floatingCartCount">0</span>
+    </button>
+
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+    <script>
+        /* Setup Language & User in Header */
+        const curLang = getLang();
+        document.getElementById(curLang === 'ru' ? 'langBtnRu' : 'langBtnUz').classList.add('active');
+
+        document.getElementById("navAllEvents").textContent = t("allEvents");
+        document.getElementById("navConcerts").textContent = t("concerts");
+        document.getElementById("navCulture").textContent = t("culturalEvents");
+        document.getElementById("navCategories").textContent = t("categories");
+        document.getElementById("navSport").textContent = t("sport");
+        document.getElementById("navTheater").textContent = t("theater");
+        document.getElementById("navKids").textContent = t("kids");
+        document.getElementById("navOther").textContent = t("otherEvents");
+        document.getElementById("appDownloadTitle").textContent = t("downloadAppTitle");
+        document.getElementById("appDownloadText").textContent = t("downloadAppText");
+        document.getElementById("footerSupportLabel").textContent = t("supportService");
+        document.getElementById("footerInfoLabel").textContent = t("information");
+        document.getElementById("footerSecLabel").textContent = t("security");
+        document.getElementById("footerSecText").textContent = t("securityText");
+        document.getElementById("footerCopyright").textContent = t("copyright");
+
+        if (curLang === 'ru') {
+            const lblCat = document.getElementById("lblFilterCat");
+            if (lblCat) lblCat.textContent = "Категория";
+            const lblFrom = document.getElementById("lblFilterFrom");
+            if (lblFrom) lblFrom.textContent = "Дата с";
+            const lblTo = document.getElementById("lblFilterTo");
+            if (lblTo) lblTo.textContent = "Дата по";
+            const applyBtn = document.getElementById("applyFilterBtn");
+            if (applyBtn) applyBtn.textContent = " Фильтровать";
+            const resetBtn = document.getElementById("resetFilterBtn");
+            if (resetBtn) resetBtn.textContent = "✕ Сбросить";
+            const weekTitle = document.getElementById("weekStripTitle");
+            if (weekTitle) weekTitle.textContent = " События на этой неделе";
+        }
+
+        const user = getCurrentUser();
+        if (user) {
+            const profileLink = document.getElementById("profileLink");
+            if (profileLink) {
+                const parent = profileLink.parentNode;
+                const wrap = document.createElement("div");
+                wrap.className = "user-header";
+                let adminBtn = "";
+                if (user.role === "admin") {
+                    adminBtn = `<a href="adminPanel.html" class="admin-nav-link">🛠 ${t("adminPanel")}</a>`;
+                }
+                wrap.innerHTML = `
+                    ${adminBtn}
+                    <span class="user-badge">👤 ${user.username}</span>
+                    <button class="header-logout" onclick="logout()">${t("logout")}</button>
+                `;
+                parent.replaceChild(wrap, profileLink);
+            }
+        }
+    </script>
+</body>
+
+</html>

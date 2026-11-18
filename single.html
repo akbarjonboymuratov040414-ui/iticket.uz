@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tadbir — iTicket.UZ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ticket.css">
+</head>
+
+<body>
+  <!-- Header with spacious navbar -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="iTicket bosh sahifa">
+        <span class="logo-mark">i</span>Ticket<span>.UZ</span>
+      </a>
+
+      <div class="header-center">
+        <div class="lang-switch">
+          <button class="lang-btn" id="langBtnUz" onclick="setLang('uz')">UZ</button>
+          <button class="lang-btn" id="langBtnRu" onclick="setLang('ru')">RU</button>
+        </div>
+
+        <nav class="main-nav">
+          <a href="index.html" id="navHome">Bosh sahifa</a>
+          <a href="index.html#category/concerts" id="navConcerts">Konsertlar</a>
+          <a href="index.html#category/cultural-events" id="navCulture">Madaniy tadbirlar</a>
+        </nav>
+      </div>
+
+      <div class="header-actions" id="headerActions">
+        <button class="icon-btn" id="favHeaderBtn" title="Sevimlilar">♡<span class="action-count" id="favHeaderCount">0</span></button>
+        <button class="cart-btn" id="cartHeaderBtn" title="Savat">🛒<span class="cart-amount" id="cartHeaderCount">0</span></button>
+        <a class="profile-btn" id="profileLink" href="signIN.html" title="Kirish">👤</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Dialog for Favorites and Cart -->
+  <dialog class="utility-dialog" id="utilityDialog">
+    <div class="utility-dialog-inner">
+      <button class="dialog-close" id="dialogClose">×</button>
+      <div id="utilityContent"></div>
+    </div>
+  </dialog>
+
+  <main>
+    <div class="event-detail" id="eventDetail"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <section class="footer-contact">
+        <a href="index.html" class="footer-brand"><span>i</span>ticket.uz</a>
+        <p id="footerSupportLabel">Qo'llab-quvvatlash xizmati</p>
+        <a class="footer-phone" href="tel:+998712071071">+998 712 071-071</a>
+        <a class="footer-phone" href="tel:+998712072072">+998 712 072-072</a>
+      </section>
+      <section>
+        <h3 id="footerInfoLabel">Ma'lumot</h3>
+        <ul>
+          <li><a href="https://iticket.uz/en/page/faq">FAQ</a></li>
+          <li><a href="https://iticket.uz/en/page/support">Yordam</a></li>
+          <li><a href="https://iticket.uz/en/page/rules">Foydalanish shartlari</a></li>
+          <li><a href="https://iticket.uz/en/page/privacy">Maxfiylik siyosati</a></li>
+        </ul>
+      </section>
+      <section>
+        <h3>iTicket</h3>
+        <ul>
+          <li><a href="https://iticket.uz/en/page/about">Biz haqimizda</a></li>
+          <li><a href="https://iticket.uz/en/venues">Joylar</a></li>
+          <li><a href="https://iticket.uz/en/page/contacts">Kontaktlar</a></li>
+        </ul>
+      </section>
+      <section class="footer-security">
+        <h3 id="footerSecLabel">Xavfsizlik</h3>
+        <p id="footerSecText">Barcha to'lovlar Visa, Mastercard, Click va Uzum Bank orqali 3D Secure bilan himoyalangan</p>
+        <img src="https://iticket.uz/images/cards.svg" alt="Visa, Mastercard">
+        <img src="https://iticket.uz/images/cards2-1.svg" alt="Click, Uzum Bank">
+      </section>
+    </div>
+    <div class="container footer-bottom">
+      <p id="footerCopyright">ITICKET — "ITICKET INGURUZ" MChJ QKning ro'yxatdan o'tgan savdo belgisi</p>
+      <nav class="footer-social" aria-label="Ijtimoiy tarmoqlar">
+        <a href="https://t.me/iticket_tg" target="_blank" rel="noopener">➤</a>
+        <a href="https://www.facebook.com/iTicket.uz/" target="_blank" rel="noopener">f</a>
+        <a href="https://www.instagram.com/iticket.uz/" target="_blank" rel="noopener">◎</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="db.js"></script>
+  <script>
+    /* Language Setup */
+    const curLang = getLang();
+    document.getElementById(curLang === 'ru' ? 'langBtnRu' : 'langBtnUz').classList.add('active');
+
+    document.getElementById("navHome").textContent = t("allEvents");
+    document.getElementById("navConcerts").textContent = t("concerts");
+    document.getElementById("navCulture").textContent = t("culturalEvents");
+    document.getElementById("footerSupportLabel").textContent = t("supportService");
+    document.getElementById("footerInfoLabel").textContent = t("information");
+    document.getElementById("footerSecLabel").textContent = t("security");
+    document.getElementById("footerSecText").textContent = t("securityText");
+    document.getElementById("footerCopyright").textContent = t("copyright");
+
+    /* User state */
+    const currentUser = getCurrentUser();
+    const headerActions = document.getElementById("headerActions");
+
+    if (currentUser) {
+      let adminBtn = "";
+      if (currentUser.role === "admin") {
+        adminBtn = `<a href="adminPanel.html" class="admin-nav-link">🛠 ${t("adminPanel")}</a>`;
+      }
+      const profLink = document.getElementById("profileLink");
+      if (profLink) {
+        const wrap = document.createElement("div");
+        wrap.className = "user-header";
+        wrap.innerHTML = `
+          ${adminBtn}
+          <span class="user-badge">👤 ${currentUser.username}</span>
+          <button class="header-logout" onclick="logout()">${t("logout")}</button>
+        `;
+        profLink.parentNode.replaceChild(wrap, profLink);
+      }
+    } else {
+      const profLink = document.getElementById("profileLink");
+      if (profLink) {
+        profLink.href = "signIN.html?redirect=" + encodeURIComponent(window.location.href);
+      }
+    }
+
+    /* Event loading */
+    const params = new URLSearchParams(window.location.search);
+    const eventId = Number(params.get("id")) || 1;
+    let eventList = typeof Events !== "undefined" ? Events : [];
+    if (localStorage.getItem("Events")) {
+      try {
+        const stored = JSON.parse(localStorage.getItem("Events"));
+        if (stored && Array.isArray(stored) && stored.length >= Events.length) {
+          eventList = stored;
+        } else {
+          eventList = Events;
+          localStorage.setItem("Events", JSON.stringify(Events));
+        }
+      } catch(e) {
+        eventList = Events;
+      }
+    } else {
+      localStorage.setItem("Events", JSON.stringify(Events));
+    }
+    const event = eventList.find(item => item.id === eventId) || eventList[0];
+
+    function formatDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return value;
+      const day = d.getDate();
+      const year = d.getFullYear();
+      const monthsUz = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+      const monthsRu = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+      const monthName = curLang === 'ru' ? monthsRu[d.getMonth()] : monthsUz[d.getMonth()];
+      return curLang === 'ru' ? `${day} ${monthName} ${year}` : `${day}-${monthName}, ${year}`;
+    }
+
+    function formatPrice(value) {
+      if (!value) return t("free");
+      return value.toLocaleString("ru-RU") + " UZS";
+    }
+
+    function getBookedSeats(eId) {
+      const bookings = JSON.parse(localStorage.getItem("Bookings") || "[]");
+      const booked = [];
+      bookings.forEach(b => {
+        if (b.eventId === eId && Array.isArray(b.seats)) {
+          b.seats.forEach(s => booked.push(s));
+        }
+      });
+      return booked;
+    }
+
+    /* 3D AUDITORIUM VENUE LAYOUT MATCHING USER'S SCREENSHOT */
+    function buildScreenshotVenueHTML(ev) {
+      const booked = getBookedSeats(ev.id);
+
+      // Price Tiers list matching screenshot
+      const tiers = [
+        { price: 300000, color: "#7dd3fc" },
+        { price: 350000, color: "#f472b6" },
+        { price: 420000, color: "#fb7185" },
+        { price: 480000, color: "#c084fc" },
+        { price: 500000, color: "#60a5fa" },
+        { price: 550000, color: "#818cf8" },
+        { price: 600000, color: "#86efac" },
+        { price: 720000, color: "#22c55e" },
+        { price: 850000, color: "#2dd4bf" },
+        { price: 1000000, color: "#a3e635" },
+        { price: 1100000, color: "#fb923c" },
+        { price: 1200000, color: "#f87171" }
+      ];
+
+      // Top price badges
+      const priceBadgesHTML = tiers.map(tItem => `
+        <div class="price-tier-item">
+          <span class="price-dot" style="background:${tItem.color};"></span>
+          <span>${tItem.price.toLocaleString("ru-RU")}</span>
+        </div>
+      `).join("");
+
+      // Helper to generate seat in amphitheater
+      function makeHallSeat(sector, row, seatNum, tierIdx) {
+        const tier = tiers[tierIdx % tiers.length];
+        const seatId = `${sector.charAt(0)}${row}-${seatNum}`;
+        const isBooked = booked.includes(seatId);
+        const bg = isBooked ? "#dc2626" : tier.color;
+        const cls = isBooked ? "hall-seat booked" : "hall-seat available";
+
+        return `
+          <div class="${cls}"
+               data-seat="${seatId}"
+               data-sector="${sector}"
+               data-row="${row}"
+               data-num="${seatNum}"
+               data-price="${tier.price}"
+               style="background:${bg};">
+          </div>
+        `;
+      }
+
+      /* 1. Upper Balcony (Left wing, Center, Right wing) */
+      let balconyLeftHTML = "";
+      for (let r = 1; r <= 5; r++) {
+        balconyLeftHTML += `<div class="amphitheater-row">`;
+        for (let s = 1; s <= 13; s++) {
+          balconyLeftHTML += makeHallSeat("Balkon", r, s, (r === 1 ? 0 : 4));
+        }
+        balconyLeftHTML += `</div>`;
+      }
+
+      let balconyCenterHTML = "";
+      for (let r = 1; r <= 5; r++) {
+        balconyCenterHTML += `<div class="amphitheater-row">`;
+        for (let s = 14; s <= 31; s++) {
+          // Center cutout at top
+          if (r <= 2 && s >= 21 && s <= 24) {
+            balconyCenterHTML += `<div style="width:12px; height:12px; margin:0 1.5px; opacity:0;"></div>`;
+          } else {
+            balconyCenterHTML += makeHallSeat("Balkon", r, s, 0);
+          }
+        }
+        balconyCenterHTML += `</div>`;
+      }
+
+      let balconyRightHTML = "";
+      for (let r = 1; r <= 5; r++) {
+        balconyRightHTML += `<div class="amphitheater-row">`;
+        for (let s = 32; s <= 44; s++) {
+          balconyRightHTML += makeHallSeat("Balkon", r, s, (r === 1 ? 0 : 5));
+        }
+        balconyRightHTML += `</div>`;
+      }
+
+      /* 2. Middle Amfiteatr (Pink/purple left, Green center, Blue right) */
+      let amfiLeftHTML = "";
+      for (let r = 6; r <= 14; r++) {
+        amfiLeftHTML += `<div class="amphitheater-row">`;
+        for (let s = 1; s <= 13; s++) {
+          const tIdx = r % 2 === 0 ? 1 : 3; // pink & purple
+          amfiLeftHTML += makeHallSeat("Amfiteatr", r, s, tIdx);
+        }
+        amfiLeftHTML += `</div>`;
+      }
+
+      let amfiCenterHTML = "";
+      for (let r = 6; r <= 14; r++) {
+        amfiCenterHTML += `<div class="amphitheater-row">`;
+        for (let s = 14; s <= 35; s++) {
+          const tIdx = r % 2 === 0 ? 7 : 6; // green & mint
+          amfiCenterHTML += makeHallSeat("Amfiteatr", r, s, tIdx);
+        }
+        amfiCenterHTML += `</div>`;
+      }
+
+      let amfiRightHTML = "";
+      for (let r = 6; r <= 14; r++) {
+        amfiRightHTML += `<div class="amphitheater-row">`;
+        for (let s = 36; s <= 48; s++) {
+          const tIdx = r % 2 === 0 ? 4 : 5; // blue & indigo
+          amfiRightHTML += makeHallSeat("Amfiteatr", r, s, tIdx);
+        }
+        amfiRightHTML += `</div>`;
+      }
+
+      /* 3. Lower Parter (Teal left, Orange/Red center, Lime right) */
+      let parterLeftHTML = "";
+      for (let r = 15; r <= 24; r++) {
+        parterLeftHTML += `<div class="amphitheater-row">`;
+        for (let s = 1; s <= 11; s++) {
+          const tIdx = r % 2 === 0 ? 8 : 7; // teal & green
+          parterLeftHTML += makeHallSeat("Parter", r, s, tIdx);
+        }
+        parterLeftHTML += `</div>`;
+      }
+
+      let parterCenterHTML = "";
+      for (let r = 15; r <= 24; r++) {
+        parterCenterHTML += `<div class="amphitheater-row">`;
+        for (let s = 12; s <= 29; s++) {
+          const tIdx = r <= 18 ? 10 : 11; // orange & red
+          parterCenterHTML += makeHallSeat("Parter", r, s, tIdx);
+        }
+        parterCenterHTML += `</div>`;
+      }
+
+      let parterRightHTML = "";
+      for (let r = 15; r <= 24; r++) {
+        parterRightHTML += `<div class="amphitheater-row">`;
+        for (let s = 30; s <= 40; s++) {
+          const tIdx = r % 2 === 0 ? 9 : 6; // lime & mint
+          parterRightHTML += makeHallSeat("Parter", r, s, tIdx);
+        }
+        parterRightHTML += `</div>`;
+      }
+
+      return `
+        <div class="venue-section" id="venueSection">
+          <h2> ${ev.joy} — ${t("chooseSeat")}</h2>
+
+          <div class="venue-screenshot-container" id="venueScreenshotContainer">
+            <!-- Top Toolbar -->
+            <div class="venue-top-toolbar">
+              <button class="btn-2d-toggle" id="modeToggleBtn">2D</button>
+              <div class="price-tiers-bar">
+                ${priceBadgesHTML}
+              </div>
+              <button class="btn-fullscreen" id="fullscreenBtn" title="${t("fullscreen")}">⤢</button>
+            </div>
+
+            <!-- Floating Zoom Controls -->
+            <div class="zoom-controls">
+              <button class="btn-zoom" id="zoomInBtn" title="Kattalashtirish">+</button>
+              <button class="btn-zoom" id="zoomOutBtn" title="Kichiklashtirish">−</button>
+            </div>
+
+            <!-- Architectural Stage & Balconies Visual Frame -->
+            <div class="venue-visual-frame" id="visualFrame">
+              <div class="architectural-balcony-left">
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+              </div>
+              <div class="architectural-balcony-right">
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+                <div class="balcony-tier-line"></div>
+              </div>
+
+              <!-- Interactive Amphitheater Floor with Sectors & Aisles -->
+              <div class="interactive-hall-layout" id="interactiveHall">
+                <!-- 1. Upper Balcony Tier -->
+                <div class="tier-sectors-row tier-balcony">
+                  <div class="sector-block sector-left-wing">${balconyLeftHTML}</div>
+                  <div class="sector-block">${balconyCenterHTML}</div>
+                  <div class="sector-block sector-right-wing">${balconyRightHTML}</div>
+                </div>
+
+                <!-- 2. Middle Amfiteatr Tier -->
+                <div class="tier-sectors-row tier-amfiteatr">
+                  <div class="sector-block sector-left-wing">${amfiLeftHTML}</div>
+                  <div class="sector-block">${amfiCenterHTML}</div>
+                  <div class="sector-block sector-right-wing">${amfiRightHTML}</div>
+                </div>
+
+                <!-- 3. Lower Parter Tier -->
+                <div class="tier-sectors-row tier-parter">
+                  <div class="sector-block sector-left-wing">${parterLeftHTML}</div>
+                  <div class="sector-block">${parterCenterHTML}</div>
+                  <div class="sector-block sector-right-wing">${parterRightHTML}</div>
+                </div>
+
+                <!-- Bottom Curved Stage matching screenshot -->
+                <div class="curved-stage-bar">Sahna Stage Сцена</div>
+              </div>
+
+              <!-- Center Hover Glassmorphism Tooltip Card matching photo -->
+              <div class="hall-tooltip-card" id="hallTooltipCard">
+                <div class="hall-tooltip-grid">
+                  <div><small>Sector</small><strong id="tipSector">Parter</strong></div>
+                  <div><small>Row</small><strong id="tipRow">26</strong></div>
+                  <div><small>Seat</small><strong id="tipSeat">43</strong></div>
+                </div>
+                <div class="hall-tooltip-price" id="tipPrice">Standart 720 000 UZS</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Booking Panel Drawer -->
+          <div class="booking-panel" id="bookingPanel">
+            <h3>${t("seatsSelected")}</h3>
+            <div class="booking-info" id="bookingInfo"></div>
+            <div style="display:flex; gap:12px; margin-top:18px; flex-wrap:wrap;">
+              <button class="confirm-btn" id="confirmBtn">${t("bookButton")}</button>
+              <a href="checkout.html" class="btn-primary" style="display:inline-flex; align-items:center; text-decoration:none;">${t("goToCheckout")}</a>
+              <button class="cancel-select-btn" id="cancelBtn">${t("cancelButton")}</button>
+            </div>
+          </div>
+
+          <div class="booking-success" id="bookingSuccess">${t("bookingSuccess")}</div>
+        </div>
+
+        <!-- Google Maps Venue Section -->
+        <div class="venue-map-section">
+          <div class="venue-map-card">
+            <h3>📍 ${t("venueLocationTitle")}: <span>${ev.joy}</span></h3>
+            <iframe class="venue-map-iframe"
+                    src="https://maps.google.com/maps?q=${encodeURIComponent(ev.mapQuery || ev.joy + ' Tashkent')}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                    loading="lazy" allowfullscreen></iframe>
+          </div>
+        </div>
+      `;
+    }
+
+    /* Render Detail Page */
+    if (!event) {
+      document.getElementById("eventDetail").innerHTML = `
+        <div class="detail-not-found">
+          <h1>${t("eventNotFound")}</h1>
+          <a href="index.html">${t("backHome")}</a>
+        </div>
+      `;
+    } else {
+      document.title = event.title + " — iTicket.UZ";
+      const isSoldOut = event.holat === "sold-out";
+
+      const detailHTML = `
+        <nav class="detail-breadcrumb container">
+          <a href="index.html">${t("allEvents")}</a><span>›</span><span>${event.title}</span>
+        </nav>
+
+        <section class="detail-main container">
+          <div class="detail-poster">
+            <img src="${event.rasm}" alt="${event.title}" onerror="this.src='https://cdn.iticket.uz/event/no-app-poster.png'">
+          </div>
+          <div class="detail-content">
+            <span class="detail-category">${event.category}</span>
+            <h1>${event.title}</h1>
+            <div class="detail-info">
+              <div class="detail-info-row">
+                <span class="detail-icon"></span>
+                <div><small>${t("dateAndTime")}</small><strong>${formatDate(event.sana)}${event.vaqt ? " · " + event.vaqt : ""}</strong></div>
+              </div>
+              <div class="detail-info-row">
+                <span class="detail-icon">📍</span>
+                <div><small>${t("venue")}</small><strong>${event.joy}</strong></div>
+              </div>
+              ${event.yoshChegarasi ? `
+                <div class="detail-info-row">
+                  <span class="detail-icon"></span>
+                  <div><small>${t("ageLimit")}</small><strong>${event.yoshChegarasi}</strong></div>
+                </div>` : ''}
+              ${event.til ? `
+                <div class="detail-info-row">
+                  <span class="detail-icon"></span>
+                  <div><small>${t("language")}</small><strong>${event.til}</strong></div>
+                </div>` : ''}
+            </div>
+          </div>
+
+          <aside class="ticket-box">
+            <small>${curLang === 'ru' ? 'Цена билета' : 'Bilet narxi'}</small>
+            <strong>${isSoldOut ? t("soldOut") : (t("fromPrice") + " " + formatPrice(event.narxdan))}</strong>
+            <button id="scrollToVenue" ${isSoldOut ? "disabled" : ""}>
+              ${isSoldOut ? t("soldOut") : t("chooseSeat")}
+            </button>
+            <p>🔒 ${t("safePurchase")}</p>
+          </aside>
+        </section>
+
+        <section class="detail-description container">
+          <h2>${t("aboutEvent")}</h2>
+          <p><strong>${event.title}</strong> — ${event.category}. ${formatDate(event.sana)} kuni ${event.joy} binosida bo'lib o'tadi. Quyidagi 3D zal sxemasidan o'zingizga qulay o'rindiqni tanlang va bron qiling.</p>
+        </section>
+
+        ${buildScreenshotVenueHTML(event)}
+      `;
+
+      document.getElementById("eventDetail").innerHTML = detailHTML;
+
+      /* Scroll button */
+      const scrollBtn = document.getElementById("scrollToVenue");
+      if (scrollBtn) {
+        scrollBtn.addEventListener("click", () => {
+          const venueSection = document.getElementById("venueSection");
+          if (venueSection) venueSection.scrollIntoView({ behavior: "smooth" });
+        });
+      }
+
+      /* 3D Auditorium Zoom & Fullscreen Controls */
+      let currentZoom = 1;
+      const interactiveHall = document.getElementById("interactiveHall");
+      const zoomInBtn = document.getElementById("zoomInBtn");
+      const zoomOutBtn = document.getElementById("zoomOutBtn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const venueContainer = document.getElementById("venueScreenshotContainer");
+      const modeToggleBtn = document.getElementById("modeToggleBtn");
+
+      function updateHallTransform() {
+        if (!interactiveHall) return;
+        const is2D = interactiveHall.classList.contains("mode-2d");
+        if (is2D) {
+          interactiveHall.style.transform = `scale(${currentZoom})`;
+        } else {
+          interactiveHall.style.transform = `perspective(900px) rotateX(24deg) scale(${currentZoom})`;
+        }
+      }
+
+      // Initialize default 3D view on load
+      updateHallTransform();
+
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener("click", () => {
+          if (currentZoom < 1.6) currentZoom += 0.15;
+          updateHallTransform();
+        });
+      }
+
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener("click", () => {
+          if (currentZoom > 0.7) currentZoom -= 0.15;
+          updateHallTransform();
+        });
+      }
+
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener("click", () => {
+          if (!document.fullscreenElement) {
+            venueContainer.requestFullscreen().catch(err => {});
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      }
+
+      if (modeToggleBtn) {
+        modeToggleBtn.addEventListener("click", () => {
+          interactiveHall.classList.toggle("mode-2d");
+          const is2D = interactiveHall.classList.contains("mode-2d");
+          modeToggleBtn.textContent = is2D ? "3D" : "2D";
+          updateHallTransform();
+        });
+      }
+
+      /* Seat Hover Tooltip Card (Matching Screenshot) */
+      const hallTooltipCard = document.getElementById("hallTooltipCard");
+      const tipSector = document.getElementById("tipSector");
+      const tipRow = document.getElementById("tipRow");
+      const tipSeat = document.getElementById("tipSeat");
+      const tipPrice = document.getElementById("tipPrice");
+
+      interactiveHall.addEventListener("mouseover", function (e) {
+        const seat = e.target.closest(".hall-seat");
+        if (!seat) return;
+
+        tipSector.textContent = seat.dataset.sector || "Parter";
+        tipRow.textContent = seat.dataset.row || "1";
+        tipSeat.textContent = seat.dataset.num || "1";
+        const priceNum = Number(seat.dataset.price) || 720000;
+        tipPrice.textContent = `Standart ${priceNum.toLocaleString("ru-RU")} UZS`;
+        hallTooltipCard.style.display = "block";
+      });
+
+      interactiveHall.addEventListener("mouseleave", function () {
+        hallTooltipCard.style.display = "none";
+      });
+
+      /* SEAT CLICK & SELECTION LOGIC */
+      let selectedSeats = [];
+      const bookingPanel = document.getElementById("bookingPanel");
+      const bookingInfo = document.getElementById("bookingInfo");
+      const confirmBtn = document.getElementById("confirmBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const bookingSuccess = document.getElementById("bookingSuccess");
+
+      function updatePanel() {
+        if (selectedSeats.length > 0) {
+          bookingPanel.classList.add("active");
+          const total = selectedSeats.reduce((acc, s) => acc + (s.price || (event.narxdan || 80000)), 0);
+          bookingInfo.innerHTML = `
+            <span>${t("selectedSeatsLabel")} <strong>${selectedSeats.map(s => s.id).join(", ")}</strong></span>
+            <span>${t("seatsCountLabel")} <strong>${selectedSeats.length} ta</strong></span>
+            <span>${t("totalPriceLabel")} <strong style="color:#b47800; font-size:18px;">${total.toLocaleString("ru-RU")} UZS</strong></span>
+          `;
+        } else {
+          bookingPanel.classList.remove("active");
+        }
+      }
+
+      interactiveHall.addEventListener("click", function (e) {
+        const seat = e.target.closest(".hall-seat");
+        if (!seat) return;
+
+        // Requirement: Agar login bo'lmagan bo'lsa -> sign in ga o'tkazsin!
+        if (!currentUser) {
+          alert(t("loginRequiredAlert"));
+          window.location.href = "signIN.html?redirect=" + encodeURIComponent(window.location.href);
+          return;
+        }
+
+        // If booked
+        if (seat.classList.contains("booked")) {
+          alert(t("seatAlreadyBooked"));
+          return;
+        }
+
+        // Toggle selection
+        const seatId = seat.dataset.seat;
+        const seatPrice = Number(seat.dataset.price) || (event.narxdan || 80000);
+        const idx = selectedSeats.findIndex(s => s.id === seatId);
+
+        if (idx !== -1) {
+          selectedSeats.splice(idx, 1);
+          seat.classList.remove("selected");
+        } else {
+          selectedSeats.push({ id: seatId, price: seatPrice });
+          seat.classList.add("selected");
+        }
+
+        updatePanel();
+      });
+
+      /* Confirm Booking */
+      if (confirmBtn) {
+        confirmBtn.addEventListener("click", function () {
+          if (selectedSeats.length === 0) return;
+
+          const bookings = JSON.parse(localStorage.getItem("Bookings") || "[]");
+          bookings.push({
+            eventId: event.id,
+            userId: currentUser.id,
+            userLogin: currentUser.login,
+            seats: selectedSeats.map(s => s.id),
+            date: new Date().toISOString()
+          });
+          localStorage.setItem("Bookings", JSON.stringify(bookings));
+
+          // Turn booked seats RED
+          selectedSeats.forEach(s => {
+            const seatEl = document.querySelector(`.hall-seat[data-seat="${s.id}"]`);
+            if (seatEl) {
+              seatEl.classList.remove("selected", "available");
+              seatEl.classList.add("booked");
+              seatEl.style.background = "#dc2626";
+            }
+          });
+
+          selectedSeats = [];
+          updatePanel();
+
+          bookingSuccess.style.display = "block";
+          setTimeout(() => {
+            bookingSuccess.style.display = "none";
+          }, 5000);
+          updateHeaderCounts();
+        });
+      }
+
+      /* Cancel Selection */
+      if (cancelBtn) {
+        cancelBtn.addEventListener("click", function () {
+          selectedSeats.forEach(s => {
+            const seatEl = document.querySelector(`.hall-seat[data-seat="${s.id}"]`);
+            if (seatEl) seatEl.classList.remove("selected");
+          });
+          selectedSeats = [];
+          updatePanel();
+        });
+      }
+    }
+
+    /* FAVORITES & CART HEADER MODALS */
+    const dialog = document.getElementById("utilityDialog");
+    const dialogContent = document.getElementById("utilityContent");
+    const dialogClose = document.getElementById("dialogClose");
+
+    dialogClose.addEventListener("click", () => dialog.close());
+
+    function updateHeaderCounts() {
+      const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+      document.getElementById("favHeaderCount").textContent = favs.length;
+
+      const bookings = JSON.parse(localStorage.getItem("Bookings") || "[]");
+      let count = 0;
+      if (currentUser) {
+        bookings.forEach(b => {
+          if (b.userLogin === currentUser.login) count += (b.seats ? b.seats.length : 0);
+        });
+      }
+      document.getElementById("cartHeaderCount").textContent = count;
+    }
+
+    updateHeaderCounts();
+
+    // Favorites click opens Favorites list modal!
+    document.getElementById("favHeaderBtn").addEventListener("click", function () {
+      function renderFavModal() {
+        const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+        const favEvents = eventList.filter(e => favs.includes(e.id));
+
+        let content = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--line);">
+            <h2 style="font-size:22px; font-weight:900; color:var(--text-dark); margin:0;">
+              <span style="color:#e23d64;">♥</span> ${t("favoritesTitle")} <span style="font-size:14px; background:var(--yellow-light); color:#a37200; padding:2px 10px; border-radius:12px; margin-left:6px;">${favEvents.length}</span>
+            </h2>
+          </div>
+        `;
+
+        if (favEvents.length === 0) {
+          content += `
+            <div style="text-align:center; padding:48px 20px;">
+              <div style="font-size:52px; color:#cbd5e1; margin-bottom:14px;">♡</div>
+              <h4 style="font-size:17px; font-weight:800; color:var(--text-dark); margin-bottom:8px;">${t("emptyFavorites")}</h4>
+            </div>
+          `;
+        } else {
+          content += `<div class="fav-items-list">`;
+          favEvents.forEach(fe => {
+            content += `
+              <div class="fav-item-row">
+                <img src="${fe.rasm}" alt="${fe.title}" onerror="this.src='https://cdn.iticket.uz/event/no-app-poster.png'">
+                <div class="fav-item-info">
+                  <h4>${fe.title}</h4>
+                  <p>📍 ${fe.joy} ·  ${fe.sana}</p>
+                  <strong>${fe.narxdan ? fe.narxdan.toLocaleString("ru-RU") + " UZS" : t("free")}</strong>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                  <a href="single.html?id=${fe.id}" class="btn-primary" style="padding:8px 18px; font-size:13px; text-decoration:none; white-space:nowrap; border-radius:10px;">Bilet olish →</a>
+                  <button class="remove-fav-btn" data-rem-id="${fe.id}">✕ O'chirish</button>
+                </div>
+              </div>
+            `;
+          });
+          content += `</div>`;
+        }
+
+        dialogContent.innerHTML = content;
+        dialog.showModal();
+
+        dialogContent.querySelectorAll(".remove-fav-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const remId = Number(btn.dataset.remId);
+            let updatedFavs = JSON.parse(localStorage.getItem("favorites") || "[]");
+            updatedFavs = updatedFavs.filter(id => id !== remId);
+            localStorage.setItem("favorites", JSON.stringify(updatedFavs));
+            updateHeaderCounts();
+            renderFavModal();
+          });
+        });
+      }
+
+      renderFavModal();
+    });
+
+    // Cart click opens cart modal with Checkout button!
+    document.getElementById("cartHeaderBtn").addEventListener("click", function () {
+      if (!currentUser) {
+        alert(t("loginRequiredAlert"));
+        window.location.href = "signIN.html";
+        return;
+      }
+
+      const bookings = JSON.parse(localStorage.getItem("Bookings") || "[]");
+      const userBookings = bookings.filter(b => b.userLogin === currentUser.login);
+
+      let content = `<h2>${t("cartTitle")}</h2>`;
+      if (userBookings.length === 0) {
+        content += `<p style="color:var(--muted); margin-top:16px;">${t("emptyCart")}</p>`;
+      } else {
+        content += `<div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">`;
+        userBookings.forEach((b, idx) => {
+          const ev = eventList.find(e => e.id === b.eventId) || eventList[0];
+          content += `
+            <div style="padding:12px 16px; background:#fdfaf0; border:1px solid var(--line); border-radius:12px;">
+              <h4 style="font-size:14px; font-weight:800;">${idx + 1}. ${ev.title}</h4>
+              <p style="color:var(--muted); font-size:12px;">${ev.joy} · ${ev.sana}</p>
+              <p style="color:#b47800; font-weight:800; font-size:13px;">Joylar: ${b.seats.join(", ")} (${b.seats.length} ta)</p>
+            </div>
+          `;
+        });
+        content += `</div>`;
+        content += `<a href="checkout.html" class="btn-primary" style="display:inline-block; width:100%; text-align:center; text-decoration:none; margin-top:20px; font-size:15px;">💳 ${t("goToCheckout")}</a>`;
+      }
+
+      dialogContent.innerHTML = content;
+      dialog.showModal();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ro'yxatdan o'tish — iTicket.UZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ticket.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="iTicket bosh sahifa">
+                <span class="logo-mark">i</span>Ticket<span>.UZ</span>
+            </a>
+            <div class="header-center">
+                <div class="lang-switch">
+                    <button class="lang-btn" id="langBtnUz" onclick="setLang('uz')">UZ</button>
+                    <button class="lang-btn" id="langBtnRu" onclick="setLang('ru')">RU</button>
+                </div>
+                <nav class="main-nav">
+                    <a href="index.html" id="navHome">Bosh sahifa</a>
+                </nav>
+            </div>
+            <div class="header-actions"></div>
+        </div>
+    </header>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <h1 id="signUpTitle">Ro'yxatdan o'tish</h1>
+            <p class="subtitle" id="signUpSub">iTicket.UZ hisobingizni yarating</p>
+
+            <div class="auth-field">
+                <label for="fullname" id="labelName">To'liq ismingiz *</label>
+                <input id="fullname" type="text" placeholder="Masalan: Sardor Aliyev" autofocus required>
+            </div>
+            <div class="auth-field">
+                <label for="login" id="labelLogin">Login *</label>
+                <input id="login" type="text" placeholder="Foydalanuvchi logini" required>
+            </div>
+            <div class="auth-field">
+                <label for="phone" id="labelPhone">Telefon raqam *</label>
+                <input id="phone" type="tel" placeholder="+998 90 123 45 67" required>
+            </div>
+            <div class="auth-field">
+                <label for="password" id="labelPass">Parol *</label>
+                <input id="password" type="password" placeholder="Kamida 4 ta belgi" required>
+            </div>
+            <div class="auth-field">
+                <label for="password2" id="labelPass2">Parolni tasdiqlash *</label>
+                <input id="password2" type="password" placeholder="Parolni qayta kiriting" required>
+            </div>
+
+            <button class="auth-btn" id="registerBtn">Ro'yxatdan o'tish</button>
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-success" id="authSuccess"></div>
+
+            <p class="auth-link">
+                <span id="haveAccountText">Hisobingiz bormi?</span>
+                <a id="signInLink" href="signIN.html">Kirish</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script>
+        const curLang = getLang();
+        document.getElementById(curLang === 'ru' ? 'langBtnRu' : 'langBtnUz').classList.add('active');
+
+        if (curLang === 'ru') {
+            document.getElementById("signUpTitle").textContent = "Регистрация";
+            document.getElementById("signUpSub").textContent = "Создайте ваш аккаунт iTicket.UZ";
+            document.getElementById("labelName").textContent = "Полное имя *";
+            document.getElementById("labelLogin").textContent = "Логин *";
+            document.getElementById("labelPhone").textContent = "Номер телефона *";
+            document.getElementById("labelPass").textContent = "Пароль *";
+            document.getElementById("labelPass2").textContent = "Подтвердите пароль *";
+            document.getElementById("registerBtn").textContent = "Зарегистрироваться";
+            document.getElementById("haveAccountText").textContent = "Уже есть аккаунт?";
+            document.getElementById("signInLink").textContent = "Войти";
+            document.getElementById("navHome").textContent = "Главная";
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const redirectUrl = params.get("redirect") || "index.html";
+
+        if (params.get("redirect")) {
+            document.getElementById("signInLink").href = "signIN.html?redirect=" + encodeURIComponent(redirectUrl);
+        }
+
+        document.getElementById("registerBtn").addEventListener("click", function () {
+            const fullname = document.getElementById("fullname").value.trim();
+            const login = document.getElementById("login").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const password2 = document.getElementById("password2").value.trim();
+            const errorEl = document.getElementById("authError");
+            const successEl = document.getElementById("authSuccess");
+            errorEl.style.display = "none";
+            successEl.style.display = "none";
+
+            if (!fullname || !login || !phone || !password) {
+                errorEl.textContent = curLang === 'ru' ? "Заполните все обязательные поля!" : "Barcha maydonlarni to'ldiring!";
+                errorEl.style.display = "block";
+                return;
+            }
+            if (password.length < 4) {
+                errorEl.textContent = curLang === 'ru' ? "Пароль должен содержать минимум 4 символа!" : "Parol kamida 4 belgidan iborat bo'lishi kerak!";
+                errorEl.style.display = "block";
+                return;
+            }
+            if (password !== password2) {
+                errorEl.textContent = curLang === 'ru' ? "Пароли не совпадают!" : "Kiritilgan parollar bir-biriga mos kelmadi!";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const usersList = typeof Users !== "undefined" ? Users : JSON.parse(localStorage.getItem("Users") || "[]");
+            const exists = usersList.find(u => u.login.toLowerCase() === login.toLowerCase());
+            if (exists) {
+                errorEl.textContent = curLang === 'ru' ? "Этот логин уже занят! Выберите другой." : "Bu login allaqachon band! Boshqa login tanlang.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            const newUser = {
+                id: usersList.length > 0 ? (usersList[usersList.length - 1].id + 1) : 1,
+                username: fullname,
+                login: login,
+                password: password,
+                number: phone,
+                role: "user"
+            };
+
+            usersList.push(newUser);
+            localStorage.setItem("Users", JSON.stringify(usersList));
+            localStorage.setItem("loggedInUser", login);
+            localStorage.setItem("username", fullname);
+            localStorage.setItem("role", "user");
+
+            successEl.textContent = curLang === 'ru' ? "Вы успешно зарегистрированы! Перенаправление..." : "Muvaffaqiyatli ro'yxatdan o'tdingiz! Tizimga yo'naltirilmoqda...";
+            successEl.style.display = "block";
+
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 1200);
+        });
+
+        document.getElementById("password2").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") document.getElementById("registerBtn").click();
+        });
+    </script>
+</body>
+</html>
